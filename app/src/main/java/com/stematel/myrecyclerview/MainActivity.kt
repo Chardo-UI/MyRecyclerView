@@ -11,11 +11,17 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
+    private var title = "Mode List"
+    private val list = ArrayList<Hero>()
+    private var mode: Int = 0
+    companion object {
+        private const val STATE_TITLE = "state_string"
+        private const val STATE_LIST = "state_list"
+        private const val STATE_MODE = "state_mode"
+    }
     private fun showSelectedHero(hero: Hero) {
         Toast.makeText(this, "Kamu memilih ${hero.name}", Toast.LENGTH_SHORT).show()
     }
-
-    private val list = ArrayList<Hero>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,8 +29,21 @@ class MainActivity : AppCompatActivity() {
 
         rv_heroes.setHasFixedSize(true)
 
-        list.addAll(getListHeroes())
-        showRecyclerList()
+        if (savedInstanceState == null) {
+            setActionBarTitle(title)
+            list.addAll(getListHeroes())
+            showRecyclerList()
+            mode = R.id.action_list
+        } else {
+            title = savedInstanceState.getString(STATE_TITLE).toString()
+            val stateList = savedInstanceState.getParcelableArrayList<Hero>(STATE_LIST)
+            val stateMode = savedInstanceState.getInt(STATE_MODE)
+            setActionBarTitle(title)
+            if (stateList != null) {
+                list.addAll(stateList)
+            }
+            setMode(stateMode)
+        }
     }
 
     fun getListHeroes(): ArrayList<Hero> {
@@ -44,7 +63,12 @@ class MainActivity : AppCompatActivity() {
         return listHero
     }
 
-
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_TITLE, title)
+        outState.putParcelableArrayList(STATE_LIST, list)
+        outState.putInt(STATE_MODE, mode)
+    }
 
     private fun showRecyclerList() {
         rv_heroes.layoutManager = LinearLayoutManager(this)
@@ -57,7 +81,6 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
-
 
     private fun showRecyclerGrid() {
         rv_heroes.layoutManager = GridLayoutManager(this, 2)
@@ -77,7 +100,7 @@ class MainActivity : AppCompatActivity() {
         rv_heroes.adapter = cardViewHeroAdapter
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
         return super.onCreateOptionsMenu(menu)
     }
@@ -87,21 +110,27 @@ class MainActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+
     private fun setMode(selectedMode: Int) {
-        when(selectedMode) {
+        when (selectedMode) {
             R.id.action_list -> {
-                title = "Recycler List"
+                title = "Mode List"
                 showRecyclerList()
             }
             R.id.action_grid -> {
-                title = "Recycler Grid"
+                title = "Mode Grid"
                 showRecyclerGrid()
             }
             R.id.action_cardview -> {
-                title = "Recycler CardView"
+                title = "Mode CardView"
                 showRecyclerCardView()
             }
         }
+        mode = selectedMode
+        setActionBarTitle(title)
     }
 
+    private fun setActionBarTitle(title: String?) {
+        supportActionBar?.title = title
+    }
 }
